@@ -1,23 +1,335 @@
 // Smart Vending & Godown Material Dispenser Kiosk Controller
-// Telugu & English Multilingual Speech, Voice Recognition, and Hardware Board Simulation
+// Telugu & English Multilingual Speech, Voice Recognition, and Cloudflare/Local Datastore
+
+// Default embedded inventory data for seamless Cloudflare Pages / Offline support
+const DEFAULT_KIOSK_DB = {
+  config: {
+    workerPin: "1234",
+    voicePassphrases: ["1234", "verify", "open", "తెరువు", "సరిచూడు", "పాస్‌వర్డ్", "నమస్కారం"],
+    adminPin: "9999",
+    defaultLowStockThreshold: 5,
+    systemName: "Smart Vending & Godown Material Dispenser",
+    systemNameTelugu: "స్మార్ట్ వెండింగ్ & గోడౌన్ మెటీరియల్ డిస్పెన్సర్"
+  },
+  products: [
+    {
+      id: "prod_1",
+      nameEn: "Heavy Duty Industrial Ropes",
+      nameTe: "భారీ పారిశ్రామిక తాళ్లు",
+      shortNameEn: "Ropes",
+      shortNameTe: "తాళ్లు",
+      category: "Lifting & Rigging",
+      categoryTe: "లిఫ్టింగ్ & రిగ్గింగ్",
+      location: "Godown 1 - Left Corner (Bay A-01)",
+      locationTe: "గోడౌన్ 1 - ఎడమ మూల (బే A-01)",
+      godown: "Godown 1",
+      spot: "Left Corner",
+      quantity: 14,
+      minThreshold: 5,
+      unit: "Bundles",
+      unitTe: "కట్టలు",
+      image: "/images/ropes.svg",
+      descriptionEn: "High tensile nylon rope, 20m coil with reinforced loops.",
+      descriptionTe: "20 మీటర్ల హై-టెన్సైల్ నైలాన్ తాడు, రీన్‌ఫోర్స్డ్ లూప్‌లతో."
+    },
+    {
+      id: "prod_2",
+      nameEn: "Industrial Safety Helmets",
+      nameTe: "పారిశ్రామిక రక్షణ హెల్మెట్లు",
+      shortNameEn: "Safety Helmet",
+      shortNameTe: "హెల్మెట్",
+      category: "Safety Equipment (PPE)",
+      categoryTe: "రక్షణ పరికరాలు",
+      location: "Godown 2 - Rack A3 (Top Shelf)",
+      locationTe: "గోడౌన్ 2 - రాక్ A3 (పై షెల్ఫ్)",
+      godown: "Godown 2",
+      spot: "Rack A3",
+      quantity: 8,
+      minThreshold: 5,
+      unit: "Pieces",
+      unitTe: "ముక్కలు",
+      image: "/images/helmet.svg",
+      descriptionEn: "ISI certified impact resistant construction helmet.",
+      descriptionTe: "ISI సర్టిఫైడ్ ఇంపాక్ట్ రెసిస్టెంట్ హెల్మెట్."
+    },
+    {
+      id: "prod_3",
+      nameEn: "Heavy Work Gloves",
+      nameTe: "భారీ పని చేతి తొడుగులు",
+      shortNameEn: "Gloves",
+      shortNameTe: "చేతి తొడుగులు",
+      category: "Safety Equipment (PPE)",
+      categoryTe: "రక్షణ పరికరాలు",
+      location: "Godown 1 - Shelf 2 (Central Aisle)",
+      locationTe: "గోడౌన్ 1 - షెల్ఫ్ 2 (మధ్య నడవ)",
+      godown: "Godown 1",
+      spot: "Shelf 2",
+      quantity: 4,
+      minThreshold: 6,
+      unit: "Pairs",
+      unitTe: "జతలు",
+      image: "/images/gloves.svg",
+      descriptionEn: "Cut-resistant nitrile coated safety hand gloves.",
+      descriptionTe: "కట్-రెసిస్టెంట్ నైట్రైల్ కోటెడ్ భద్రతా చేతి తొడుగులు."
+    },
+    {
+      id: "prod_4",
+      nameEn: "Ratchet Cargo Tie-Down Belts",
+      nameTe: "రాట్చెట్ కార్గో టై-డౌన్ బెల్టులు",
+      shortNameEn: "Ratchet Belts",
+      shortNameTe: "రాట్చెట్ బెల్టులు",
+      category: "Securing & Fastening",
+      categoryTe: "బిగింపు పరికరాలు",
+      location: "Godown 3 - Bay 4 (Right Wing)",
+      locationTe: "గోడౌన్ 3 - బే 4 (కుడి విభాగం)",
+      godown: "Godown 3",
+      spot: "Bay 4",
+      quantity: 18,
+      minThreshold: 5,
+      unit: "Pieces",
+      unitTe: "ముక్కలు",
+      image: "/images/belts.svg",
+      descriptionEn: "5-ton cargo lashing strap with zinc plated ratchet.",
+      descriptionTe: "5-టన్నుల కార్గో లాషింగ్ స్ట్రాప్ రాట్చెట్‌తో."
+    },
+    {
+      id: "prod_5",
+      nameEn: "Rechargeable LED Work Torch",
+      nameTe: "రీఛార్జ్ చేయగల LED టార్చ్ లైట్",
+      shortNameEn: "LED Torch",
+      shortNameTe: "టార్చ్ లైట్",
+      category: "Lighting Tools",
+      categoryTe: "లైటింగ్ టూల్స్",
+      location: "Godown 1 - Right Bin 05",
+      locationTe: "గోడౌన్ 1 - కుడి బిన్ 05",
+      godown: "Godown 1",
+      spot: "Right Bin 05",
+      quantity: 3,
+      minThreshold: 5,
+      unit: "Pieces",
+      unitTe: "ముక్కలు",
+      image: "/images/torch.svg",
+      descriptionEn: "1200 Lumens waterproof magnetic rechargeable torch.",
+      descriptionTe: "1200 ల్యూమెన్స్ వాటర్‌ప్రూఫ్ రీఛార్జబుల్ టార్చ్."
+    },
+    {
+      id: "prod_6",
+      nameEn: "Complete Industrial Tool Kit Set",
+      nameTe: "పారిశ్రామిక టూల్ కిట్ బాక్స్",
+      shortNameEn: "Tool Kit",
+      shortNameTe: "టూల్ కిట్",
+      category: "Hand Tools",
+      categoryTe: "చేతి పనిముట్లు",
+      location: "Godown 2 - Section B (Locker 08)",
+      locationTe: "గోడౌన్ 2 - విభాగం B (లాకర్ 08)",
+      godown: "Godown 2",
+      spot: "Section B Locker 08",
+      quantity: 9,
+      minThreshold: 4,
+      unit: "Sets",
+      unitTe: "సెట్లు",
+      image: "/images/toolkit.svg",
+      descriptionEn: "48-piece mechanic and electrician ratchet socket toolkit.",
+      descriptionTe: "48-ముక్కల మెకానిక్ మరియు ఎలక్ట్రీషియన్ టూల్‌కిట్."
+    }
+  ],
+  logs: [
+    {
+      id: "log_init_01",
+      timestamp: new Date().toISOString(),
+      action: "INITIALIZED",
+      productName: "Heavy Work Gloves",
+      quantity: 2,
+      remainingStock: 4,
+      verifiedBy: "VOICE: verify",
+      location: "Godown 1 - Shelf 2"
+    }
+  ]
+};
+
+// Resilient Local Storage Manager
+class KioskLocalStore {
+  constructor() {
+    this.storageKey = 'SMART_VENDING_STORAGE_V1';
+    this.init();
+  }
+
+  init() {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      if (!stored) {
+        localStorage.setItem(this.storageKey, JSON.stringify(DEFAULT_KIOSK_DB));
+      }
+    } catch (e) {
+      console.warn('LocalStorage unavailable, using in-memory data', e);
+    }
+  }
+
+  getData() {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      return stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(DEFAULT_KIOSK_DB));
+    } catch (e) {
+      return JSON.parse(JSON.stringify(DEFAULT_KIOSK_DB));
+    }
+  }
+
+  saveData(data) {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(data));
+    } catch (e) {
+      console.warn('Could not save to localStorage', e);
+    }
+  }
+
+  verifyPassword(inputPassword) {
+    const db = this.getData();
+    const input = (inputPassword || '').toString().trim().toLowerCase();
+    const workerPin = (db.config.workerPin || '1234').toLowerCase();
+    const adminPin = (db.config.adminPin || '9999').toLowerCase();
+    const voiceWords = (db.config.voicePassphrases || []).map(w => w.toLowerCase());
+
+    const isMatch = (input === workerPin) ||
+                    (input === adminPin) ||
+                    voiceWords.some(w => input.includes(w) || w.includes(input));
+
+    if (isMatch) {
+      return {
+        success: true,
+        role: input === adminPin ? 'admin' : 'worker',
+        message: 'Password verified successfully! (పాస్‌వర్డ్ సరిచూడబడింది!)'
+      };
+    }
+
+    return {
+      success: false,
+      message: 'Authentication failed. Incorrect PIN or voice password. (ధృవీకరణ విఫలమైంది: తప్పుడు పిన్ లేదా పాస్‌వర్డ్)'
+    };
+  }
+
+  getProducts() {
+    const db = this.getData();
+    return db.products || [];
+  }
+
+  updateProduct(id, updates) {
+    const db = this.getData();
+    const idx = db.products.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      const oldLoc = db.products[idx].location;
+      db.products[idx] = { ...db.products[idx], ...updates };
+
+      if (updates.location && updates.location !== oldLoc) {
+        db.logs.unshift({
+          id: 'log_loc_' + Date.now(),
+          timestamp: new Date().toISOString(),
+          action: 'LOCATION_SHIFTED',
+          productName: db.products[idx].nameEn,
+          fromLocation: oldLoc,
+          toLocation: updates.location,
+          notes: `Shifted to ${updates.location} (${updates.locationTe || ''})`
+        });
+      }
+      this.saveData(db);
+      return db.products[idx];
+    }
+    return null;
+  }
+
+  dispense(productId, qty, authDesc) {
+    const db = this.getData();
+    const product = db.products.find(p => p.id === productId);
+    if (!product) return { success: false, message: 'Product not found' };
+
+    const takeQty = parseInt(qty, 10) || 1;
+    if (product.quantity < takeQty) {
+      return { success: false, message: `Insufficient stock! Only ${product.quantity} left.` };
+    }
+
+    product.quantity -= takeQty;
+
+    const logEntry = {
+      id: 'dispense_' + Date.now(),
+      timestamp: new Date().toISOString(),
+      action: 'DISPENSED',
+      productId: product.id,
+      productName: product.nameEn,
+      productNameTe: product.nameTe,
+      quantity: takeQty,
+      unit: product.unit,
+      remainingStock: product.quantity,
+      verifiedBy: authDesc || 'PIN / VOICE',
+      location: product.location,
+      locationTe: product.locationTe
+    };
+
+    db.logs.unshift(logEntry);
+    this.saveData(db);
+
+    const isLow = product.quantity <= (product.minThreshold || 5);
+
+    return {
+      success: true,
+      dispensedItem: {
+        id: product.id,
+        nameEn: product.nameEn,
+        nameTe: product.nameTe,
+        quantityTaken: takeQty,
+        remainingStock: product.quantity,
+        location: product.location,
+        locationTe: product.locationTe
+      },
+      isLowStock: isLow,
+      log: logEntry
+    };
+  }
+
+  getAlerts() {
+    const db = this.getData();
+    const alerts = [];
+    (db.products || []).forEach(p => {
+      const th = p.minThreshold || 5;
+      if (p.quantity <= th) {
+        alerts.push({
+          id: 'alert_' + p.id,
+          productId: p.id,
+          productName: `${p.nameEn} (${p.nameTe || ''})`,
+          currentQuantity: p.quantity,
+          minThreshold: th,
+          location: p.location,
+          locationTe: p.locationTe || p.location,
+          timestamp: new Date().toISOString(),
+          status: 'ACTIVE',
+          message: `LOW STOCK ALERT: "${p.nameEn}" is at ${p.quantity} ${p.unit} (Threshold: ${th}). Location: ${p.location}`,
+          messageTe: `తక్కువ స్టాక్ హెచ్చరిక: "${p.nameTe || p.nameEn}" కేవలం ${p.quantity} ${p.unitTe || 'ముక్కలు'} మాత్రమే మిగిలి ఉన్నాయి (కనిష్ట పరిమితి: ${th}). స్థానం: ${p.locationTe || p.location}`
+        });
+      }
+    });
+    return alerts;
+  }
+
+  getLogs() {
+    const db = this.getData();
+    return db.logs || [];
+  }
+}
 
 class VendingKioskApp {
   constructor() {
     this.currentLanguage = 'en'; // 'en' | 'te'
     this.currentScreen = 'lock-screen';
     this.enteredPin = '';
-    this.targetAuthPin = '1234';
-    this.adminPin = '9999';
     this.products = [];
     this.alerts = [];
-    this.cart = {}; // { productId: qty }
     this.selectedProductForDispense = null;
     this.audioCtx = null;
     this.recognition = null;
     this.isListening = false;
-    this.speechUtterance = null;
-    this.systemConfig = {};
+    this.systemConfig = DEFAULT_KIOSK_DB.config;
     
+    // Local storage engine (works everywhere: Cloudflare Pages, GitHub Pages, or Node.js)
+    this.localStore = new KioskLocalStore();
+
     this.initAudioContext();
     this.initSpeechRecognition();
     this.initEventListeners();
@@ -68,7 +380,6 @@ class VendingKioskApp {
   }
 
   playDispenseSound() {
-    // Mechanical relay and motor whirl sound
     this.playTone(280, 'square', 0.6, 0.15);
     setTimeout(() => this.playTone(340, 'sine', 0.4, 0.18), 300);
     setTimeout(() => this.playTone(480, 'triangle', 0.3, 0.2), 700);
@@ -86,7 +397,7 @@ class VendingKioskApp {
       return;
     }
 
-    window.speechSynthesis.cancel(); // Stop any active speech
+    window.speechSynthesis.cancel();
 
     const isTelugu = this.currentLanguage === 'te';
     const textToSpeak = isTelugu ? (textTe || textEn) : (textEn || textTe);
@@ -97,10 +408,9 @@ class VendingKioskApp {
     utterance.rate = 0.95;
     utterance.pitch = 1.0;
 
-    // Try finding natural voices
     const voices = window.speechSynthesis.getVoices();
     if (voices && voices.length > 0) {
-      const match = voices.find(v => v.lang.includes(isTelugu ? 'te' : 'en'));
+      const match = voices.find(v => v.lang && v.lang.includes(isTelugu ? 'te' : 'en'));
       if (match) utterance.voice = match;
     }
 
@@ -128,18 +438,17 @@ class VendingKioskApp {
 
     this.recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript.trim();
-      console.log('Voice recognized transcript:', transcript);
+      console.log('Voice transcript:', transcript);
       this.handleVoiceTranscript(transcript);
     };
 
     this.recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
       this.isListening = false;
       this.updateVoiceUI(false);
       this.showStatusToast(
         this.currentLanguage === 'te' 
           ? 'వాయిస్ సరిగ్గా వినబడలేదు, దయచేసి మళ్ళీ చెప్పండి లేదా పిన్ నొక్కండి' 
-          : 'Could not catch your voice. Please repeat or use keypad.',
+          : 'Could not catch voice. Please repeat or use keypad.',
         'warning'
       );
     };
@@ -156,12 +465,11 @@ class VendingKioskApp {
       return;
     }
     this.voiceContext = context;
-    // Set speech recognition language based on current language
     this.recognition.lang = this.currentLanguage === 'te' ? 'te-IN' : 'en-IN';
     try {
       this.recognition.start();
     } catch (e) {
-      console.log('Recognition already running or re-starting', e);
+      console.log('Voice recognition restarting', e);
     }
   }
 
@@ -187,17 +495,22 @@ class VendingKioskApp {
     }
   }
 
-  // Load Initial Configurations from Server
+  // Load Configurations
   async loadConfig() {
     try {
       const res = await fetch('/api/config');
-      this.systemConfig = await res.json();
-      if (this.systemConfig.voicePassphrases) {
-        document.getElementById('voiceKeywordsHint').innerText = 
-          this.systemConfig.voicePassphrases.join(', ');
+      if (res.ok) {
+        this.systemConfig = await res.json();
+      } else {
+        this.systemConfig = this.localStore.getData().config;
       }
     } catch (err) {
-      console.error('Failed to load config:', err);
+      this.systemConfig = this.localStore.getData().config;
+    }
+
+    if (this.systemConfig.voicePassphrases) {
+      const hint = document.getElementById('voiceKeywordsHint');
+      if (hint) hint.innerText = this.systemConfig.voicePassphrases.join(', ');
     }
   }
 
@@ -205,24 +518,32 @@ class VendingKioskApp {
   async loadProducts() {
     try {
       const res = await fetch('/api/products');
-      this.products = await res.json();
-      this.renderProducts();
-      this.renderAdminInventory();
+      if (res.ok) {
+        this.products = await res.json();
+      } else {
+        this.products = this.localStore.getProducts();
+      }
     } catch (err) {
-      console.error('Failed to load products:', err);
+      this.products = this.localStore.getProducts();
     }
+    this.renderProducts();
+    this.renderAdminInventory();
   }
 
   // Load Low Stock Alerts
   async loadAlerts() {
     try {
       const res = await fetch('/api/alerts');
-      const data = await res.json();
-      this.alerts = data.alerts || [];
-      this.renderAlerts();
+      if (res.ok) {
+        const data = await res.json();
+        this.alerts = data.alerts || [];
+      } else {
+        this.alerts = this.localStore.getAlerts();
+      }
     } catch (err) {
-      console.error('Failed to load alerts:', err);
+      this.alerts = this.localStore.getAlerts();
     }
+    this.renderAlerts();
   }
 
   // Render Product Cards
@@ -255,7 +576,6 @@ class VendingKioskApp {
             <div class="card-title-en">${p.nameEn}</div>
             <div class="card-title-te">${p.nameTe || ''}</div>
             
-            <!-- Precise Godown Location Badge -->
             <div class="location-badge ${isGodown1 ? 'highlight-godown1' : ''}">
               <span>📍</span>
               <div>
@@ -268,7 +588,6 @@ class VendingKioskApp {
               ${this.currentLanguage === 'te' ? (p.descriptionTe || p.descriptionEn) : p.descriptionEn}
             </p>
 
-            <!-- Bilingual Listen Option Button -->
             <div class="card-audio-row">
               <button class="btn-audio-listen" onclick="window.kiosk.listenProduct('${p.id}')" title="Listen product details in Telugu & English">
                 <span>🔊</span> 
@@ -276,7 +595,6 @@ class VendingKioskApp {
               </button>
             </div>
 
-            <!-- Dispense / Quantity Selector -->
             <div class="card-actions">
               <div class="qty-counter">
                 <button class="qty-btn" onclick="window.kiosk.changeCardQty('${p.id}', -1)" ${isOutOfStock ? 'disabled' : ''}>-</button>
@@ -295,7 +613,6 @@ class VendingKioskApp {
     }).join('');
   }
 
-  // Listen to single product details in Telugu and English
   listenProduct(productId) {
     const p = this.products.find(item => item.id === productId);
     if (!p) return;
@@ -309,7 +626,6 @@ class VendingKioskApp {
     this.showStatusToast(`🔊 Playing voice details for: ${p.nameEn}`, 'info');
   }
 
-  // Global Listen: Read out overview or reload audio
   listenAllProducts() {
     const count = this.products.length;
     const ropes = this.products.find(p => p.shortNameEn === 'Ropes' || p.nameEn.includes('Ropes'));
@@ -344,7 +660,6 @@ class VendingKioskApp {
     this.playKeypadBeep();
   }
 
-  // Switch App Screen
   switchScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(screenId);
@@ -355,7 +670,6 @@ class VendingKioskApp {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Language Switch
   setLanguage(lang) {
     this.currentLanguage = lang;
     document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -377,7 +691,6 @@ class VendingKioskApp {
     this.speakText(greetingEn, greetingTe);
   }
 
-  // Keypad PIN input handling
   handleKeypadPress(digit) {
     this.playKeypadBeep();
     if (this.enteredPin.length < 6) {
@@ -399,12 +712,14 @@ class VendingKioskApp {
     });
   }
 
-  // Verify PIN on Home Page
+  // Verify PIN on Home Page (Seamless Cloudflare & Server Support)
   async submitHomePin() {
     if (!this.enteredPin) {
       this.showStatusToast(this.currentLanguage === 'te' ? 'దయచేసి పాస్‌వర్డ్ పిన్ నొక్కండి' : 'Please enter PIN', 'warning');
       return;
     }
+
+    let authResult = null;
 
     try {
       const res = await fetch('/api/verify-password', {
@@ -412,67 +727,80 @@ class VendingKioskApp {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: this.enteredPin, type: 'home_login' })
       });
-      const data = await res.json();
-
-      if (data.success) {
-        this.playSuccessChime();
-        this.showStatusToast(data.message, 'success');
-        this.enteredPin = '';
-        this.updatePinDisplay();
-
-        const welcomeEn = "Welcome. Access granted. You can now select warehouse products.";
-        const welcomeTe = "స్వాగతం. ప్రాప్యత మంజూరు చేయబడింది. మీరు ఇప్పుడు గోడౌన్ వస్తువులను ఎంచుకోవచ్చు.";
-        this.speakText(welcomeEn, welcomeTe);
-
-        this.switchScreen('catalog-screen');
-      } else {
-        this.playErrorBuzzer();
-        this.showStatusToast(data.message, 'danger');
-        this.enteredPin = '';
-        this.updatePinDisplay();
+      if (res.ok) {
+        authResult = await res.json();
       }
-    } catch (err) {
+    } catch (e) {
+      // Server offline / Cloudflare Pages static fallback
+    }
+
+    // Fallback to resilient local store if backend returned 404 or failed
+    if (!authResult) {
+      authResult = this.localStore.verifyPassword(this.enteredPin);
+    }
+
+    if (authResult.success) {
+      this.playSuccessChime();
+      this.showStatusToast(authResult.message, 'success');
+      this.enteredPin = '';
+      this.updatePinDisplay();
+
+      const welcomeEn = "Welcome. Access granted. You can now select warehouse products.";
+      const welcomeTe = "స్వాగతం. ప్రాప్యత మంజూరు చేయబడింది. మీరు ఇప్పుడు గోడౌన్ వస్తువులను ఎంచుకోవచ్చు.";
+      this.speakText(welcomeEn, welcomeTe);
+
+      this.switchScreen('catalog-screen');
+    } else {
       this.playErrorBuzzer();
-      this.showStatusToast('Server communication error', 'danger');
+      this.showStatusToast(authResult.message, 'danger');
+      this.enteredPin = '';
+      this.updatePinDisplay();
     }
   }
 
   // Verify Spoken Password
   async verifyVoicePassword(spokenText, context) {
+    let authResult = null;
+
     try {
       const res = await fetch('/api/verify-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: spokenText, type: 'home_login' })
       });
-      const data = await res.json();
-
-      if (data.success) {
-        this.playSuccessChime();
-        if (context === 'home') {
-          const welcomeEn = "Voice password matched. Welcome to Godown Vending!";
-          const welcomeTe = "వాయిస్ పాస్‌వర్డ్ సరిపోలింది. గోడౌన్ వెండింగ్‌కు స్వాగతం!";
-          this.speakText(welcomeEn, welcomeTe);
-          this.switchScreen('catalog-screen');
-        } else if (context === 'dispense') {
-          this.executeDispenseConfirmation(spokenText, null);
-        }
-      } else {
-        this.playErrorBuzzer();
-        this.showStatusToast(
-          this.currentLanguage === 'te' 
-            ? 'చెప్పిన పాస్‌వర్డ్ సరిపోలలేదు ("' + spokenText + '"). మళ్ళీ ప్రయత్నించండి.' 
-            : 'Voice password did not match ("' + spokenText + '"). Try again.',
-          'danger'
-        );
+      if (res.ok) {
+        authResult = await res.json();
       }
-    } catch (err) {
+    } catch (e) {
+      // Fallback
+    }
+
+    if (!authResult) {
+      authResult = this.localStore.verifyPassword(spokenText);
+    }
+
+    if (authResult.success) {
+      this.playSuccessChime();
+      if (context === 'home') {
+        const welcomeEn = "Voice password matched. Welcome to Godown Vending!";
+        const welcomeTe = "వాయిస్ పాస్‌వర్డ్ సరిపోలింది. గోడౌన్ వెండింగ్‌కు స్వాగతం!";
+        this.speakText(welcomeEn, welcomeTe);
+        this.switchScreen('catalog-screen');
+      } else if (context === 'dispense') {
+        this.executeDispenseConfirmation(spokenText, null);
+      }
+    } else {
       this.playErrorBuzzer();
-      this.showStatusToast('Verification server error', 'danger');
+      this.showStatusToast(
+        this.currentLanguage === 'te' 
+          ? 'చెప్పిన పాస్‌వర్డ్ సరిపోలలేదు ("' + spokenText + '"). మళ్ళీ ప్రయత్నించండి.' 
+          : 'Voice password did not match ("' + spokenText + '"). Try again.',
+        'danger'
+      );
     }
   }
 
-  // Initiate Dispense Modal (Like Pay Screen in Vending Machine)
+  // Initiate Dispense Modal
   initiateDispense(productId) {
     const product = this.products.find(p => p.id === productId);
     if (!product) return;
@@ -483,7 +811,6 @@ class VendingKioskApp {
     this.selectedProductForDispense = { product, qty };
     this.dispenseEnteredPin = '';
 
-    // Populate Modal
     document.getElementById('dispenseItemTitle').innerText = `${product.nameEn} (${product.nameTe || ''})`;
     document.getElementById('dispenseItemLocation').innerText = `📍 ${product.location} (${product.locationTe || ''})`;
     document.getElementById('dispenseItemQty').innerText = `${qty} ${product.unit}`;
@@ -491,14 +818,12 @@ class VendingKioskApp {
 
     this.updateDispensePinDisplay();
 
-    // Reset animation state
     document.getElementById('dispenseSimWrapper').style.display = 'none';
     document.getElementById('dispenseAuthWrapper').style.display = 'block';
 
     const modal = document.getElementById('dispenseModal');
     modal.classList.add('active');
 
-    // Prompt user via voice
     const promptEn = `Please speak your password or enter PIN to dispense ${qty} ${product.unit} of ${product.shortNameEn || product.nameEn}.`;
     const promptTe = `${product.shortNameTe || product.nameTe} యొక్క ${qty} యూనిట్లను విడుదల చేయడానికి దయచేసి పాస్‌వర్డ్ చెప్పండి లేదా టైప్ చేయండి.`;
     this.speakText(promptEn, promptTe);
@@ -540,11 +865,12 @@ class VendingKioskApp {
     await this.executeDispenseConfirmation(null, this.dispenseEnteredPin);
   }
 
-  // Execute Dispense Request to Server
+  // Execute Dispense Request
   async executeDispenseConfirmation(spokenPhrase, pin) {
     if (!this.selectedProductForDispense) return;
 
     const { product, qty } = this.selectedProductForDispense;
+    let dispenseResult = null;
 
     try {
       const res = await fetch('/api/dispense', {
@@ -557,70 +883,75 @@ class VendingKioskApp {
           spokenPhrase: spokenPhrase
         })
       });
-
-      const data = await res.json();
-
-      if (data.success) {
-        this.playSuccessChime();
-        this.playDispenseSound();
-
-        // Switch to Vending Dispense Animation view
-        document.getElementById('dispenseAuthWrapper').style.display = 'none';
-        const simWrapper = document.getElementById('dispenseSimWrapper');
-        simWrapper.style.display = 'block';
-
-        const coil = document.getElementById('animCoil');
-        const dropItem = document.getElementById('animDropItem');
-        coil.classList.add('rotating');
-
-        setTimeout(() => {
-          dropItem.classList.add('dropping');
-          this.playTone(400, 'triangle', 0.2, 0.3); // Clunk drop sound
-        }, 1200);
-
-        // Voice confirmation
-        const confEn = `Dispense approved! ${qty} units of ${product.shortNameEn || product.nameEn} dispensed from ${product.location}. Remaining stock is ${data.dispensedItem.remainingStock}.`;
-        const confTe = `విడుదల ధృవీకరించబడింది! ${product.locationTe || product.location} నుండి ${qty} యూనిట్లు విడుదల చేయబడ్డాయి. మిగిలిన స్టాక్: ${data.dispensedItem.remainingStock}.`;
-        this.speakText(confEn, confTe);
-
-        // Update local product quantity
-        product.quantity = data.dispensedItem.remainingStock;
-        this.renderProducts();
-        this.loadAlerts(); // Refresh alerts
-
-        // Check if low stock siren needed
-        if (data.isLowStock) {
-          setTimeout(() => {
-            this.playWarningSiren();
-            this.showStatusToast(
-              this.currentLanguage === 'te' 
-                ? `హెచ్చరిక: ${product.nameTe || product.nameEn} స్టాక్ తక్కువగా ఉంది!` 
-                : `ALERT: ${product.nameEn} stock is LOW!`,
-              'danger'
-            );
-          }, 3000);
-        }
-
-        // Close modal after 4 seconds
-        setTimeout(() => {
-          this.closeDispenseModal();
-          dropItem.classList.remove('dropping');
-          coil.classList.remove('rotating');
-        }, 4500);
-
-      } else {
-        this.playErrorBuzzer();
-        this.showStatusToast(data.message, 'danger');
-        this.dispenseEnteredPin = '';
-        this.updateDispensePinDisplay();
+      if (res.ok) {
+        dispenseResult = await res.json();
       }
     } catch (err) {
+      // Server offline / Cloudflare Pages static fallback
+    }
+
+    if (!dispenseResult) {
+      // Local verification
+      const verify = this.localStore.verifyPassword(pin || spokenPhrase);
+      if (verify.success) {
+        dispenseResult = this.localStore.dispense(product.id, qty, spokenPhrase ? `VOICE: "${spokenPhrase}"` : `PIN: ****`);
+      } else {
+        dispenseResult = { success: false, message: verify.message };
+      }
+    }
+
+    if (dispenseResult && dispenseResult.success) {
+      this.playSuccessChime();
+      this.playDispenseSound();
+
+      document.getElementById('dispenseAuthWrapper').style.display = 'none';
+      const simWrapper = document.getElementById('dispenseSimWrapper');
+      simWrapper.style.display = 'block';
+
+      const coil = document.getElementById('animCoil');
+      const dropItem = document.getElementById('animDropItem');
+      coil.classList.add('rotating');
+
+      setTimeout(() => {
+        dropItem.classList.add('dropping');
+        this.playTone(400, 'triangle', 0.2, 0.3);
+      }, 1200);
+
+      const confEn = `Dispense approved! ${qty} units of ${product.shortNameEn || product.nameEn} dispensed from ${product.location}. Remaining stock is ${dispenseResult.dispensedItem.remainingStock}.`;
+      const confTe = `విడుదల ధృవీకరించబడింది! ${product.locationTe || product.location} నుండి ${qty} యూనిట్లు విడుదల చేయబడ్డాయి. మిగిలిన స్టాక్: ${dispenseResult.dispensedItem.remainingStock}.`;
+      this.speakText(confEn, confTe);
+
+      product.quantity = dispenseResult.dispensedItem.remainingStock;
+      this.renderProducts();
+      this.loadAlerts();
+
+      if (dispenseResult.isLowStock) {
+        setTimeout(() => {
+          this.playWarningSiren();
+          this.showStatusToast(
+            this.currentLanguage === 'te' 
+              ? `హెచ్చరిక: ${product.nameTe || product.nameEn} స్టాక్ తక్కువగా ఉంది!` 
+              : `ALERT: ${product.nameEn} stock is LOW!`,
+            'danger'
+          );
+        }, 3000);
+      }
+
+      setTimeout(() => {
+        this.closeDispenseModal();
+        dropItem.classList.remove('dropping');
+        coil.classList.remove('rotating');
+      }, 4500);
+
+    } else {
       this.playErrorBuzzer();
-      this.showStatusToast('Dispense communication failure', 'danger');
+      this.showStatusToast(dispenseResult ? dispenseResult.message : 'Authorization error', 'danger');
+      this.dispenseEnteredPin = '';
+      this.updateDispensePinDisplay();
     }
   }
 
-  // Render Low Stock Alert Banners & Drawer
+  // Render Low Stock Alerts
   renderAlerts() {
     const alertBox = document.getElementById('globalAlertBox');
     const alertCountBadges = document.querySelectorAll('.alert-count-badge');
@@ -691,7 +1022,6 @@ class VendingKioskApp {
     });
   }
 
-  // Render Admin Inventory Table
   renderAdminInventory() {
     const tbody = document.getElementById('adminInventoryTbody');
     if (!tbody) return;
@@ -733,7 +1063,6 @@ class VendingKioskApp {
     }).join('');
   }
 
-  // Location Shift Tool for Admin
   openLocationShiftModal(productId) {
     const p = this.products.find(item => item.id === productId);
     if (!p) return;
@@ -755,70 +1084,74 @@ class VendingKioskApp {
 
   async updateProductLocation(productId, locationEn, locationTe) {
     try {
-      const res = await fetch(`/api/products/${productId}`, {
+      await fetch(`/api/products/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ location: locationEn, locationTe: locationTe })
       });
-      const data = await res.json();
-      if (data.success) {
-        this.playSuccessChime();
-        this.showStatusToast(`Location updated to "${locationEn}"!`, 'success');
-        this.loadProducts();
-      }
-    } catch (err) {
-      alert('Error updating location');
+    } catch (e) {
+      // Local fallback
     }
+
+    this.localStore.updateProduct(productId, { location: locationEn, locationTe: locationTe });
+    this.playSuccessChime();
+    this.showStatusToast(`Location updated to "${locationEn}"!`, 'success');
+    this.loadProducts();
   }
 
   async quickRestock(productId, amount) {
     const p = this.products.find(item => item.id === productId);
     if (!p) return;
 
+    const newQty = p.quantity + amount;
     try {
-      const newQty = p.quantity + amount;
-      const res = await fetch(`/api/products/${productId}`, {
+      await fetch(`/api/products/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quantity: newQty })
       });
-      const data = await res.json();
-      if (data.success) {
-        this.playSuccessChime();
-        this.showStatusToast(`Restocked ${p.nameEn}! New Stock: ${newQty}`, 'success');
-        this.loadProducts();
-        this.loadAlerts();
-      }
-    } catch (err) {
-      alert('Restock failed');
+    } catch (e) {
+      // Local fallback
     }
+
+    this.localStore.updateProduct(productId, { quantity: newQty });
+    this.playSuccessChime();
+    this.showStatusToast(`Restocked ${p.nameEn}! New Stock: ${newQty}`, 'success');
+    this.loadProducts();
+    this.loadAlerts();
   }
 
-  // Load Audit Logs
   async loadAdminLogs() {
+    let logs = [];
     try {
       const res = await fetch('/api/logs');
-      const logs = await res.json();
-      const tbody = document.getElementById('adminLogsTbody');
-      if (!tbody) return;
-
-      tbody.innerHTML = logs.map(l => `
-        <tr>
-          <td>${new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
-          <td><span style="font-weight:700; color:${l.action === 'DISPENSED' ? '#38bdf8' : '#10b981'}">${l.action}</span></td>
-          <td>${l.productName}</td>
-          <td>${l.quantity || l.addedQuantity || '-'}</td>
-          <td>${l.remainingStock !== undefined ? l.remainingStock : '-'}</td>
-          <td>${l.location || l.toLocation || '-'}</td>
-          <td>${l.verifiedBy || l.notes || '-'}</td>
-        </tr>
-      `).join('');
-    } catch (err) {
-      console.error('Failed to load logs:', err);
+      if (res.ok) {
+        logs = await res.json();
+      }
+    } catch (e) {
+      // Fallback
     }
+
+    if (!logs || logs.length === 0) {
+      logs = this.localStore.getLogs();
+    }
+
+    const tbody = document.getElementById('adminLogsTbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = logs.map(l => `
+      <tr>
+        <td>${new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+        <td><span style="font-weight:700; color:${l.action === 'DISPENSED' ? '#38bdf8' : '#10b981'}">${l.action}</span></td>
+        <td>${l.productName}</td>
+        <td>${l.quantity || l.addedQuantity || '-'}</td>
+        <td>${l.remainingStock !== undefined ? l.remainingStock : '-'}</td>
+        <td>${l.location || l.toLocation || '-'}</td>
+        <td>${l.verifiedBy || l.notes || '-'}</td>
+      </tr>
+    `).join('');
   }
 
-  // UI Toast Message
   showStatusToast(msg, type = 'info') {
     const toast = document.getElementById('statusToast');
     if (!toast) return;
@@ -831,9 +1164,7 @@ class VendingKioskApp {
     }, 4000);
   }
 
-  // Bind All Event Listeners
   initEventListeners() {
-    // Keypad listeners on Home Screen
     document.querySelectorAll('#homeNumpad .numpad-btn[data-num]').forEach(btn => {
       btn.addEventListener('click', () => this.handleKeypadPress(btn.dataset.num));
     });
@@ -842,13 +1173,11 @@ class VendingKioskApp {
     const submitBtn = document.getElementById('homePinSubmit');
     if (submitBtn) submitBtn.addEventListener('click', () => this.submitHomePin());
 
-    // Voice button on Home
     const voiceHomeBtn = document.getElementById('homeVoiceBtn');
     if (voiceHomeBtn) {
       voiceHomeBtn.addEventListener('click', () => this.startVoiceListening('home'));
     }
 
-    // Dispense keypad listeners
     document.querySelectorAll('#dispenseNumpad .numpad-btn[data-num]').forEach(btn => {
       btn.addEventListener('click', () => this.handleDispenseKeypadPress(btn.dataset.num));
     });
@@ -857,17 +1186,14 @@ class VendingKioskApp {
     const dispenseSubmitBtn = document.getElementById('dispensePinSubmit');
     if (dispenseSubmitBtn) dispenseSubmitBtn.addEventListener('click', () => this.submitDispenseWithPin());
 
-    // Dispense voice button
     const voiceDispenseBtn = document.getElementById('dispenseVoiceBtn');
     if (voiceDispenseBtn) {
       voiceDispenseBtn.addEventListener('click', () => this.startVoiceListening('dispense'));
     }
 
-    // Modal close buttons
     const closeDispenseBtn = document.getElementById('closeDispenseModalBtn');
     if (closeDispenseBtn) closeDispenseBtn.addEventListener('click', () => this.closeDispenseModal());
 
-    // Keyboard support for testing on laptop / PC
     window.addEventListener('keydown', (e) => {
       if (this.currentScreen === 'lock-screen') {
         if (e.key >= '0' && e.key <= '9') {
@@ -882,7 +1208,6 @@ class VendingKioskApp {
   }
 }
 
-// Global initialization
 window.addEventListener('DOMContentLoaded', () => {
   window.kiosk = new VendingKioskApp();
 });
