@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Vending & Godown Material Dispenser Kiosk</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+</head>
+<body>
+
+  <!-- KIOSK SYSTEM TOP HEADER -->
+  <header class="kiosk-header">
+    <div class="kiosk-brand">
+      <div class="kiosk-logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="18" rx="2"/><line x1="6" y1="8" x2="18" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="6" y1="16" x2="12" y2="16"/>
+        </svg>
+      </div>
+      <div class="kiosk-title">
+        <h1 data-i18n-en="Smart Vending & Godown Dispenser" data-i18n-te="స్మార్ట్ వెండింగ్ & గోడౌన్ డిస్పెన్సర్">Smart Vending & Godown Dispenser</h1>
+        <span data-i18n-en="Industrial Hardware Kiosk Board" data-i18n-te="పారిశ్రామిక హార్డ్‌వేర్ కియోస్క్ బోర్డు">Industrial Hardware Kiosk Board</span>
+      </div>
+    </div>
+
+    <!-- Live Board Status & Controls -->
+    <div class="header-controls">
+      <div class="badge-live" title="VMC Controller & Relay Board Status">
+        <span class="live-pulse"></span>
+        <span>VMC BOARD ONLINE</span>
+      </div>
+
+      <!-- Language Selector (English / తెలుగు) -->
+      <div class="lang-switch">
+        <button class="lang-btn active" data-lang="en" onclick="window.kiosk.setLanguage('en')">English</button>
+        <button class="lang-btn" data-lang="te" onclick="window.kiosk.setLanguage('te')">తెలుగు</button>
+      </div>
+
+      <!-- Admin Portal Button -->
+      <button onclick="window.kiosk.openAdminModal()" class="lang-btn" style="background:#1e293b; color:#cbd5e1; border:1px solid #334155; display:flex; align-items:center; gap:6px;">
+        <span>🔒 Admin</span>
+        <span class="alert-count-badge" style="display:none; background:#ef4444; color:#fff; font-size:0.7rem; padding:2px 6px; border-radius:10px; font-weight:700;">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- SCREEN 1: HOME / LOCK SCREEN (PASSWORD VERIFICATION) -->
+  <main id="lock-screen" class="screen active">
+    <div class="lockscreen-wrapper">
+      <div style="width:68px; height:68px; background:rgba(2,132,199,0.15); border:1px solid #0284c7; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 16px; font-size:2rem;">
+        🔐
+      </div>
+
+      <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:6px;" data-i18n-en="Enter Kiosk Password / PIN" data-i18n-te="కియోస్క్ పాస్‌వర్డ్ / పిన్ నమోదు చేయండి">
+        Enter Kiosk Password / PIN
+      </h2>
+      <p style="color:var(--text-muted); font-size:0.9rem;" data-i18n-en="Enter 4-digit PIN or speak voice password to unlock" data-i18n-te="అన్‌లాక్ చేయడానికి 4-అంకెల పిన్ నొక్కండి లేదా వాయిస్ పాస్‌వర్డ్ చెప్పండి">
+        Enter 4-digit PIN or speak voice password to unlock
+      </p>
+
+      <!-- Pin Dots Display -->
+      <div class="lock-pin-display">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <!-- Touch Keypad -->
+      <div class="numpad" id="homeNumpad">
+        <button class="numpad-btn" data-num="1">1</button>
+        <button class="numpad-btn" data-num="2">2</button>
+        <button class="numpad-btn" data-num="3">3</button>
+        <button class="numpad-btn" data-num="4">4</button>
+        <button class="numpad-btn" data-num="5">5</button>
+        <button class="numpad-btn" data-num="6">6</button>
+        <button class="numpad-btn" data-num="7">7</button>
+        <button class="numpad-btn" data-num="8">8</button>
+        <button class="numpad-btn" data-num="9">9</button>
+        <button class="numpad-btn action clear" id="homePinClear">CLEAR</button>
+        <button class="numpad-btn" data-num="0">0</button>
+        <button class="numpad-btn action submit" id="homePinSubmit">ENTER</button>
+      </div>
+
+      <!-- Audio Wave Visualizer -->
+      <div class="audio-visualizer">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+
+      <!-- Voice Password Button -->
+      <button class="voice-action-btn" id="homeVoiceBtn">
+        <span class="btn-voice-text" data-i18n-en="🎤 Speak Password (Voice)" data-i18n-te="🎤 వాయిస్ పాస్‌వర్డ్ చెప్పండి">🎤 Speak Password (Voice)</span>
+      </button>
+
+      <!-- Listen Instructions in Telugu / English -->
+      <div style="margin-top:16px; display:flex; gap:10px;">
+        <button onclick="window.kiosk.speakText('Welcome to Godown Material Vending Board. Please enter PIN 1 2 3 4 or speak password to enter.', 'గోడౌన్ మెటీరియల్ వెండింగ్ బోర్డుకు స్వాగతం. ప్రవేశించడానికి దయచేసి పిన్ 1 2 3 4 నొక్కండి లేదా పాస్‌వర్డ్ చెప్పండి.')" style="flex:1; background:#1e293b; border:1px solid #334155; color:#cbd5e1; border-radius:10px; padding:10px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+          🔊 <span data-i18n-en="Listen Instructions" data-i18n-te="సూచనలను వినండి">Listen Instructions</span>
+        </button>
+      </div>
+
+      <!-- Helpful Default Credentials Hint for Kiosk Testing -->
+      <div style="margin-top:24px; padding:12px; background:#0f172a; border-radius:10px; border:1px solid #1e293b; font-size:0.78rem; color:#94a3b8; text-align:left;">
+        <div><strong>🔑 Default Worker PIN:</strong> <span style="color:#38bdf8;">1234</span> | <strong>Admin Master PIN:</strong> <span style="color:#38bdf8;">9999</span></div>
+        <div style="margin-top:4px;"><strong>🎙️ Voice Keywords:</strong> <span id="voiceKeywordsHint" style="color:#a78bfa;">1234, verify, open, తెరువు, సరిచూడు</span></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- SCREEN 2: PRODUCT CATALOG & GODOWN INVENTORY -->
+  <main id="catalog-screen" class="screen">
+    <div class="catalog-container">
+      
+      <!-- Global Low Stock Alert Strip -->
+      <div id="globalAlertBox" style="display:none;"></div>
+
+      <!-- Header Action Bar -->
+      <div class="catalog-header-bar">
+        <div>
+          <h2 style="font-size:1.4rem; font-weight:800; color:#fff;" data-i18n-en="Godown Material Inventory Catalog" data-i18n-te="గోడౌన్ మెటీరియల్ ఇన్వెంటరీ జాబితా">
+            Godown Material Inventory Catalog
+          </h2>
+          <p style="font-size:0.86rem; color:#94a3b8;" data-i18n-en="Select items to dispense with exact warehouse locations and live quantities" data-i18n-te="ఖచ్చితమైన గోడౌన్ స్థానాలు మరియు ప్రత్యక్ష పరిమాణాలతో విడుదల చేయడానికి వస్తువులను ఎంచుకోండి">
+            Select items to dispense with exact warehouse locations and live quantities
+          </p>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <!-- Listen & Reload Audio Button -->
+          <button onclick="window.kiosk.listenAllProducts()" class="btn-audio-listen" style="background:#0284c7; color:#fff; border-color:#38bdf8; padding:10px 18px; font-size:0.88rem;">
+            <span>🔊</span>
+            <span data-i18n-en="Listen Inventory Audio" data-i18n-te="ఇన్వెంటరీ వివరాలను వినండి">Listen Inventory Audio</span>
+          </button>
+
+          <!-- Warehouse Map Button -->
+          <button onclick="document.getElementById('warehouseMapModal').classList.add('active')" class="btn-audio-listen" style="padding:10px 16px; font-size:0.88rem;">
+            <span>🗺️</span>
+            <span data-i18n-en="Godown Map" data-i18n-te="గోడౌన్ మ్యాప్">Godown Map</span>
+          </button>
+
+          <!-- Lock / Exit Button -->
+          <button onclick="window.kiosk.switchScreen('lock-screen')" class="btn-audio-listen" style="background:#334155; color:#f87171; border-color:#475569; padding:10px 16px; font-size:0.88rem;">
+            <span>🔒</span>
+            <span data-i18n-en="Lock Board" data-i18n-te="లాక్ చేయండి">Lock Board</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid" id="productsGrid">
+        <!-- Injected dynamically by app.js -->
+      </div>
+    </div>
+  </main>
+
+  <!-- SCREEN 3: ADMIN MANAGEMENT PORTAL -->
+  <main id="admin-screen" class="screen">
+    <div class="catalog-container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h2 style="font-size:1.5rem; font-weight:800; color:#fff;">⚙️ Admin Control Board & Inventory System</h2>
+          <p style="color:#94a3b8; font-size:0.88rem;">Manage godown item locations, restock inventory, set low stock thresholds, and view VMC hardware status.</p>
+        </div>
+        <button onclick="window.kiosk.switchScreen('catalog-screen')" class="btn-audio-listen" style="background:#0284c7; color:#fff; padding:10px 18px;">
+          ← Back to Catalog
+        </button>
+      </div>
+
+      <!-- Admin Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab-btn active" data-tab="inventory" onclick="window.kiosk.switchAdminTab('inventory')">
+          📦 Inventory & Locations
+        </button>
+        <button class="admin-tab-btn" data-tab="alerts" onclick="window.kiosk.switchAdminTab('alerts')">
+          🚨 Low Stock Alerts (<span class="alert-count-badge">0</span>)
+        </button>
+        <button class="admin-tab-btn" data-tab="logs" onclick="window.kiosk.switchAdminTab('logs')">
+          📋 Dispense Audit History
+        </button>
+        <button class="admin-tab-btn" data-tab="hardware" onclick="window.kiosk.switchAdminTab('hardware')">
+          ⚡ VMC Board Architecture & Hardware
+        </button>
+      </div>
+
+      <!-- TAB 1: Inventory Table & Location Shifting -->
+      <div id="tab-inventory" class="admin-tab-pane">
+        <div style="background:#111827; border:1px solid #1f2937; border-radius:16px; padding:20px; overflow-x:auto;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="font-size:1.1rem; color:#f8fafc;">All Godown Items</h3>
+            <span style="font-size:0.8rem; color:#94a3b8;">Click 'Shift Location' to relocate an item between godowns/racks</span>
+          </div>
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Product (English & Telugu)</th>
+                <th>Current Godown Location</th>
+                <th>Stock Quantity</th>
+                <th>Alert Threshold (X)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminInventoryTbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: Low Stock Alerts -->
+      <div id="tab-alerts" class="admin-tab-pane" style="display:none;">
+        <div style="background:#111827; border:1px solid #1f2937; border-radius:16px; padding:24px;">
+          <h3 style="font-size:1.2rem; color:#f8fafc; margin-bottom:12px;">🚨 Real-Time Low Stock Warning & Dispatch Alerts</h3>
+          <p style="color:#94a3b8; font-size:0.88rem; margin-bottom:20px;">
+            Whenever a product quantity is reduced below threshold <strong>(Quantity &le; X)</strong>, the system triggers alerts here and dispatches simulated notifications.
+          </p>
+
+          <div id="adminAlertsContainer">
+            <!-- Alert Cards -->
+            <div style="background:#1e1b4b; border:1px solid #4338ca; border-radius:12px; padding:16px; margin-bottom:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="color:#c7d2fe; font-size:1rem;">📱 Simulated Admin SMS / Message Dispatched:</strong>
+                  <div style="color:#e0e7ff; margin-top:6px; font-family:monospace; background:#0f172a; padding:10px; border-radius:8px;">
+                    [ALERT #8821]: Low stock detected in Godown 1! "Rechargeable LED Work Torch" is at 3 units (Limit: 5). Location: Right Bin 05. Immediate replenishment required!
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: Dispense Logs -->
+      <div id="tab-logs" class="admin-tab-pane" style="display:none;">
+        <div style="background:#111827; border:1px solid #1f2937; border-radius:16px; padding:20px; overflow-x:auto;">
+          <h3 style="font-size:1.1rem; color:#f8fafc; margin-bottom:14px;">Material Dispense & Relocation Audit Trail</h3>
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Remaining</th>
+                <th>Location</th>
+                <th>Verification / Notes</th>
+              </tr>
+            </thead>
+            <tbody id="adminLogsTbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 4: Vending Machine Controller (VMC) Board Architecture -->
+      <div id="tab-hardware" class="admin-tab-pane" style="display:none;">
+        <div style="background:#111827; border:1px solid #1f2937; border-radius:16px; padding:24px;">
+          <h3 style="font-size:1.2rem; color:#38bdf8; margin-bottom:10px;">⚡ How Vending Machine Controller (VMC) Boards Actually Work</h3>
+          <p style="color:#cbd5e1; font-size:0.9rem; line-height:1.6; margin-bottom:20px;">
+            A real-world automated vending machine or smart warehouse locker runs on a dedicated <strong>VMC (Vending Machine Controller) board</strong>. Here is the exact hardware flow and how our software connects to it:
+          </p>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:18px;">
+            <div style="background:#1e293b; padding:18px; border-radius:12px; border:1px solid #334155;">
+              <h4 style="color:#38bdf8; margin-bottom:8px;">1. Master Controller & MDB Bus</h4>
+              <p style="color:#94a3b8; font-size:0.84rem; line-height:1.5;">
+                The central MCU (STM32 / ESP32 / Raspberry Pi) runs the MDB/ICP (Multi-Drop Bus / Internal Communication Protocol). It handles payment peripherals, keypads, and touchscreens.
+              </p>
+              <div style="margin-top:10px; font-size:0.75rem; color:#34d399;">● Status: MDB Communication Synchronized</div>
+            </div>
+
+            <div style="background:#1e293b; padding:18px; border-radius:12px; border:1px solid #334155;">
+              <h4 style="color:#38bdf8; margin-bottom:8px;">2. Relay & Motor Drivers (MOSFETs)</h4>
+              <p style="color:#94a3b8; font-size:0.84rem; line-height:1.5;">
+                When this software verifies the password (by voice or PIN), it signals the motor driver IC (e.g. ULN2803 / L298N) to turn the 24V spiral coil motor for the corresponding shelf.
+              </p>
+              <div style="margin-top:10px; font-size:0.75rem; color:#34d399;">● Status: Motor Relays 1-6 Ready</div>
+            </div>
+
+            <div style="background:#1e293b; padding:18px; border-radius:12px; border:1px solid #334155;">
+              <h4 style="color:#38bdf8; margin-bottom:8px;">3. Optical Drop Sensors (IR Beam)</h4>
+              <p style="color:#94a3b8; font-size:0.84rem; line-height:1.5;">
+                An infrared light curtain across the bottom delivery tray verifies whether the item physically dropped. Only after the IR beam breaks does the software finalize stock deduction!
+              </p>
+              <div style="margin-top:10px; font-size:0.75rem; color:#34d399;">● Status: Drop Sensor Aligned</div>
+            </div>
+
+            <div style="background:#1e293b; padding:18px; border-radius:12px; border:1px solid #334155;">
+              <h4 style="color:#38bdf8; margin-bottom:8px;">4. Inventory & Telemetry Gateway</h4>
+              <p style="color:#94a3b8; font-size:0.84rem; line-height:1.5;">
+                The board streams dispense timestamps, operator voice logs, and quantity counters to our cloud / local Node.js database, triggering low stock alerts automatically.
+              </p>
+              <div style="margin-top:10px; font-size:0.75rem; color:#34d399;">● Status: Real-time Telemetry Active</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: DISPENSE / VERIFICATION (SIMILAR TO PAY OPTION) -->
+  <div class="modal-overlay" id="dispenseModal">
+    <div class="modal-content">
+      
+      <!-- Authorization Stage -->
+      <div id="dispenseAuthWrapper">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="font-size:1.3rem; font-weight:800; color:#fff;" data-i18n-en="Confirm & Authorize Dispense" data-i18n-te="విడుదలను నిర్ధారించండి & ధృవీకరించండి">
+            Confirm & Authorize Dispense
+          </h3>
+          <button id="closeDispenseModalBtn" style="background:transparent; border:none; color:#94a3b8; font-size:1.6rem; cursor:pointer;">&times;</button>
+        </div>
+
+        <!-- Selected Item Preview Card -->
+        <div style="background:#1e293b; border:1px solid #334155; border-radius:14px; padding:14px; display:flex; gap:14px; align-items:center; margin-bottom:18px;">
+          <img id="dispenseItemImg" src="/images/ropes.svg" style="width:70px; height:70px; border-radius:10px; object-fit:cover;"/>
+          <div style="flex:1;">
+            <div id="dispenseItemTitle" style="font-weight:700; font-size:1.05rem; color:#fff;">Heavy Duty Industrial Ropes</div>
+            <div id="dispenseItemLocation" style="color:#38bdf8; font-size:0.82rem; margin:2px 0;">📍 Godown 1 - Left Corner</div>
+            <div style="font-size:0.86rem; color:#94a3b8;">
+              Dispense Quantity: <strong id="dispenseItemQty" style="color:#34d399;">1 Bundles</strong>
+            </div>
+          </div>
+        </div>
+
+        <p style="text-align:center; color:#cbd5e1; font-size:0.9rem; margin-bottom:14px;" data-i18n-en="Enter authorization password or speak voice password to release material" data-i18n-te="సరుకును విడుదల చేయడానికి పాస్‌వర్డ్ నమోదు చేయండి లేదా వాయిస్ ద్వారా చెప్పండి">
+          Enter authorization password or speak voice password to release material
+        </p>
+
+        <!-- Pin Dots Display for Dispense -->
+        <div class="lock-pin-display" style="margin: 10px 0 18px;">
+          <div class="pin-dot dispense-pin-dot"></div>
+          <div class="pin-dot dispense-pin-dot"></div>
+          <div class="pin-dot dispense-pin-dot"></div>
+          <div class="pin-dot dispense-pin-dot"></div>
+        </div>
+
+        <!-- Keypad for Dispense -->
+        <div class="numpad" id="dispenseNumpad" style="max-width:280px;">
+          <button class="numpad-btn" data-num="1">1</button>
+          <button class="numpad-btn" data-num="2">2</button>
+          <button class="numpad-btn" data-num="3">3</button>
+          <button class="numpad-btn" data-num="4">4</button>
+          <button class="numpad-btn" data-num="5">5</button>
+          <button class="numpad-btn" data-num="6">6</button>
+          <button class="numpad-btn" data-num="7">7</button>
+          <button class="numpad-btn" data-num="8">8</button>
+          <button class="numpad-btn" data-num="9">9</button>
+          <button class="numpad-btn action clear" id="dispensePinClear">CLEAR</button>
+          <button class="numpad-btn" data-num="0">0</button>
+          <button class="numpad-btn action submit" id="dispensePinSubmit">DISPENSE</button>
+        </div>
+
+        <!-- Audio Wave Visualizer -->
+        <div class="audio-visualizer">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+
+        <!-- Voice Password Button for Dispense -->
+        <button class="voice-action-btn" id="dispenseVoiceBtn">
+          <span class="btn-voice-text" data-i18n-en="🎤 Speak Password to Dispense" data-i18n-te="🎤 విడుదల చేయడానికి పాస్‌వర్డ్ చెప్పండి">🎤 Speak Password to Dispense</span>
+        </button>
+      </div>
+
+      <!-- Live Vending Machine Dispense Animation Stage -->
+      <div id="dispenseSimWrapper" style="display:none; text-align:center;">
+        <h3 style="font-size:1.3rem; font-weight:800; color:#38bdf8; margin-bottom:6px;" data-i18n-en="Dispensing In Progress..." data-i18n-te="విడుదల ప్రక్రియ జరుగుతోంది...">
+          Dispensing In Progress...
+        </h3>
+        <p style="color:#94a3b8; font-size:0.86rem;" data-i18n-en="Motor coil turning & optical drop sensor verification" data-i18n-te="మోటార్ కాయిల్ తిరుగుతోంది & ఆప్టికల్ డ్రాప్ సెన్సార్ తనిఖీ చేస్తోంది">
+          Motor coil turning & optical drop sensor verification
+        </p>
+
+        <!-- Hardware Animation Box -->
+        <div class="vending-box-sim">
+          <div class="vending-shelf">
+            <div class="vending-coil" id="animCoil"></div>
+            <img id="animDropItem" class="vending-item-drop" src="/images/ropes.svg" alt="Item"/>
+          </div>
+          <div class="vending-tray-bin">
+            <span>⬇️</span>
+            <span data-i18n-en="COLLECTION TRAY - TAKE MATERIAL" data-i18n-te="కలెక్షన్ ట్రే - మెటీరియల్ తీసుకోండి">COLLECTION TRAY - TAKE MATERIAL</span>
+            <span>⬇️</span>
+          </div>
+        </div>
+
+        <div style="color:#34d399; font-weight:700; font-size:1.05rem; margin-top:12px;">
+          ✓ <span data-i18n-en="Stock deducted & Transaction logged!" data-i18n-te="స్టాక్ తగ్గించబడింది & నమోదు చేయబడింది!">Stock deducted & Transaction logged!</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: WAREHOUSE FACILITY MAP -->
+  <div class="modal-overlay" id="warehouseMapModal">
+    <div class="modal-content" style="max-width:760px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:1.3rem; font-weight:800; color:#fff;">Warehouse Facility & Storage Map</h3>
+        <button onclick="document.getElementById('warehouseMapModal').classList.remove('active')" style="background:transparent; border:none; color:#94a3b8; font-size:1.6rem; cursor:pointer;">&times;</button>
+      </div>
+      <div style="border-radius:12px; overflow:hidden; border:1px solid #334155;">
+        <img src="/images/warehouse-map.svg" alt="Warehouse Map" style="width:100%; display:block;"/>
+      </div>
+      <p style="color:#94a3b8; font-size:0.82rem; margin-top:12px; text-align:center;">
+        Ropes are stationed in <strong>Godown 1 (Left Corner)</strong>. Other tools are stationed across Godown 2 and 3.
+      </p>
+    </div>
+  </div>
+
+  <!-- STATUS TOAST -->
+  <div id="statusToast" class="status-toast"></div>
+
+  <style>
+    .status-toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #1e293b;
+      color: #fff;
+      padding: 14px 22px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      font-weight: 600;
+      font-size: 0.92rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .status-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .status-toast.toast-success {
+      background: #064e3b;
+      border-color: #10b981;
+      color: #6ee7b7;
+    }
+    .status-toast.toast-danger {
+      background: #7f1d1d;
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+    .status-toast.toast-warning {
+      background: #78350f;
+      border-color: #f59e0b;
+      color: #fde68a;
+    }
+    .status-toast.toast-info {
+      background: #0c4a6e;
+      border-color: #0284c7;
+      color: #7dd3fc;
+    }
+  </style>
+
+  <script src="app.js"></script>
+</body>
+</html>

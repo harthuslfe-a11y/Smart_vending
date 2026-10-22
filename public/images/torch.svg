@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg5)"/>
+  <!-- Light Beam effect -->
+  <polygon points="260,140 390,70 390,210 260,160" fill="url(#beam)"/>
+  <circle cx="200" cy="150" r="110" fill="#334155" opacity="0.3"/>
+  <!-- Flashlight Body -->
+  <g transform="translate(60, 110)">
+    <!-- Main barrel -->
+    <rect x="50" y="30" width="120" height="40" rx="6" fill="#334155" stroke="#475569" stroke-width="2"/>
+    <!-- Textured grip stripes -->
+    <rect x="70" y="27" width="10" height="46" rx="2" fill="#0f172a"/>
+    <rect x="90" y="27" width="10" height="46" rx="2" fill="#0f172a"/>
+    <rect x="110" y="27" width="10" height="46" rx="2" fill="#0f172a"/>
+    <rect x="130" y="27" width="10" height="46" rx="2" fill="#0f172a"/>
+    <!-- Head / Reflector bezel -->
+    <path d="M 170 25 L 200 15 L 205 85 L 170 75 Z" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/>
+    <!-- Glass Lens -->
+    <ellipse cx="204" cy="50" rx="4" ry="34" fill="#bae6fd"/>
+    <!-- Power Button -->
+    <rect x="80" y="23" width="18" height="6" rx="3" fill="#ef4444"/>
+    <!-- Tail cap -->
+    <rect x="35" y="32" width="15" height="36" rx="4" fill="#1e293b"/>
+  </g>
+  <g transform="translate(20, 20)">
+    <rect width="180" height="30" rx="6" fill="#0284c7" opacity="0.9"/>
+    <text x="10" y="20" font-family="system-ui, sans-serif" font-weight="700" font-size="12" fill="#ffffff">📍 GODOWN 1: RIGHT BIN 05</text>
+  </g>
+</svg>

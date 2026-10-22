@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#991b1b"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg6)"/>
+  <circle cx="200" cy="150" r="110" fill="#334155" opacity="0.3"/>
+  <!-- Heavy Duty Toolbox -->
+  <g transform="translate(100, 75)">
+    <!-- Handle -->
+    <path d="M 60 40 L 60 15 C 60 8, 140 8, 140 15 L 140 40" fill="none" stroke="#475569" stroke-width="12" stroke-linecap="round"/>
+    <!-- Box Lid -->
+    <rect x="10" y="40" width="180" height="40" rx="8" fill="url(#boxGrad)" stroke="#b91c1c" stroke-width="2"/>
+    <!-- Box Base -->
+    <rect x="10" y="80" width="180" height="90" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+    <!-- Metal Clasps -->
+    <rect x="45" y="70" width="22" height="30" rx="4" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+    <rect x="135" y="70" width="22" height="30" rx="4" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+    <!-- Tool icons on lid -->
+    <rect x="85" y="100" width="30" height="50" rx="3" fill="#0284c7"/>
+    <circle cx="100" cy="120" r="8" fill="#38bdf8"/>
+    <text x="100" y="142" font-family="system-ui, sans-serif" font-weight="900" font-size="10" fill="#ffffff" text-anchor="middle">48 PCS</text>
+  </g>
+  <g transform="translate(20, 20)">
+    <rect width="180" height="30" rx="6" fill="#0284c7" opacity="0.9"/>
+    <text x="10" y="20" font-family="system-ui, sans-serif" font-weight="700" font-size="12" fill="#ffffff">📍 GODOWN 2: SECTION B</text>
+  </g>
+</svg>

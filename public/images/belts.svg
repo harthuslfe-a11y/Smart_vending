@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="strapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg4)"/>
+  <circle cx="200" cy="150" r="110" fill="#334155" opacity="0.3"/>
+  <!-- Ratchet Metal Body -->
+  <g transform="translate(130, 80)">
+    <!-- Heavy Ratchet Buckle -->
+    <rect x="20" y="40" width="100" height="40" rx="8" fill="#94a3b8" stroke="#cbd5e1" stroke-width="3"/>
+    <rect x="40" y="20" width="60" height="30" rx="4" fill="#64748b"/>
+    <!-- Gear teeth wheel -->
+    <circle cx="45" cy="60" r="22" fill="#475569" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="6 4"/>
+    <!-- Lever Handle -->
+    <path d="M 95 45 L 145 20 C 152 16, 160 25, 155 33 L 115 65 Z" fill="#dc2626"/>
+    <!-- Strap Loop Out -->
+    <path d="M 20 60 C -40 60, -50 150, 40 150 C 120 150, 160 170, 180 180" fill="none" stroke="url(#strapGrad)" stroke-width="26" stroke-linecap="round"/>
+    <path d="M 20 60 C -40 60, -50 150, 40 150 C 120 150, 160 170, 180 180" fill="none" stroke="#fed7aa" stroke-width="3" stroke-dasharray="10 10"/>
+    <!-- Steel J-Hook -->
+    <path d="M 180 180 C 195 190, 210 175, 200 155 C 190 140, 175 145, 170 152" fill="none" stroke="#cbd5e1" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(20, 20)">
+    <rect width="150" height="30" rx="6" fill="#0284c7" opacity="0.9"/>
+    <text x="10" y="20" font-family="system-ui, sans-serif" font-weight="700" font-size="12" fill="#ffffff">📍 GODOWN 3: BAY 4</text>
+  </g>
+</svg>
